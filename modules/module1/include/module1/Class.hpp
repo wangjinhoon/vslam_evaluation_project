@@ -9,7 +9,16 @@
 #include "easy/profiler.h"
 #include "spdlog/spdlog.h"
 #include "opencv2/opencv.hpp"
+
+#include <iostream>
+#include <ctype.h>
+#include <algorithm> // for copy
+#include <iterator> // for ostream_iterator
 #include <vector>
+#include <ctime>
+#include <sstream>
+#include <fstream>
+#include <string>
 
 using namespace std;
 using namespace cv;
@@ -35,7 +44,7 @@ void featureTracking(Mat img_1, Mat img_2, vector<Point2f>& points1, vector<Poin
 
   //getting rid of points for which the KLT tracking failed or those who have gone outside the frame
   int indexCorrection = 0;
-  for( int i=0; i<status.size(); i++)
+  for( int i=0; i < int(status.size()); i++)
   {  Point2f pt = points2.at(i- indexCorrection);
     if ((status.at(i) == 0)||(pt.x<0)||(pt.y<0)){
       if((pt.x<0)||(pt.y<0))	{
