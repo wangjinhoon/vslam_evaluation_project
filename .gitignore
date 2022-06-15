@@ -3,14 +3,17 @@
 cmake-build-debug/
 cmake-build-release/
 
-thirdparty/cereal
-thirdparty/ceres
-thirdparty/easy_profiler
-thirdparty/eigen
-thirdparty/gtest
-thirdparty/imgui
-thirdparty/opencv
-thirdparty/pangolin
-thirdparty/spdlog
+Thirdparty/cereal
+Thirdparty/ceres
+Thirdparty/easy_profiler
+Thirdparty/eigen
+Thirdparty/gtest
+Thirdparty/imgui
+Thirdparty/opencv
+Thirdparty/pangolin
+Thirdparty/spdlog
+Thirdparty/DBoW2
+Thirdparty/g2o
+Vocabulary
 actions-runner
 test_profile.prof
