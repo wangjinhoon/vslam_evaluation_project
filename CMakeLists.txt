@@ -46,6 +46,13 @@ if (Eigen3_FOUND)
    MESSAGE(STATUS "Eigen3 FOUND! - ${Eigen3_DIR}")
    set(Eigen3_LIBS Eigen3::Eigen)
 endif()
+find_package(easy_profiler REQUIRED HINTS ${CMAKE_SOURCE_DIR}/Thirdparty/easy_profiler/install/lib/cmake/easy_profiler)
+if(${easy_profiler_FOUND})
+   message(STATUS "Found: Easy-profiler - ${easy_profiler_DIR}")
+endif(${easy_profiler_FOUND})
+
+set(EASY_PROFILER_LIBS easy_profiler)
+set(BUILD_WITH_EASY_PROFILER true)
 
 
 include_directories(
@@ -53,6 +60,7 @@ ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
+${CMAKE_SOURCE_DIR}/Thirdparty/easy_profiler/install/include
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -83,6 +91,7 @@ target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
+easy_profiler
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 )
