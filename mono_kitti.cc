@@ -25,6 +25,8 @@
 #include<chrono>
 #include<iomanip>
 #include<unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include<opencv2/core/core.hpp>
 #include<opencv2/imgcodecs/legacy/constants_c.h>
 #include<omp.h>
@@ -66,6 +68,8 @@ int main(int argc, char **argv)
     // --------------------- start slam system ----------------------
     // Main loop
     cv::Mat im;
+    cout << "Input number of images to detect: ";
+    cin >> nImages;
     EASY_BLOCK("total imgs block", profiler::colors::Black)
     for(int ni=0; ni<nImages; ni++)
     {
@@ -108,18 +112,13 @@ int main(int argc, char **argv)
 
         if(ttrack<T)
             usleep((T-ttrack)*1e6);
-        EASY_END_BLOCK;
-        if(ni % 100 == 0)
-        {
-            profiler::dumpBlocksToFile("profile.prof");
-            cout << "saved profile!" << ni/100 << endl;
-        }
+
     }
 
     // Stop all threads
     SLAM.Shutdown();
 // ------------------------ end slam system --------------------------------
-    EASY_END_BLOCK;
+    EASY_END_BLOCK
     // Tracking time statistics
     sort(vTimesTrack.begin(),vTimesTrack.end());
     float totaltime = 0;
