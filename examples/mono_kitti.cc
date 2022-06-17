@@ -68,9 +68,11 @@ int main(int argc, char **argv)
     // --------------------- start slam system ----------------------
     // Main loop
     cv::Mat im;
-    cout << "Input number of images to detect: ";
-    cin >> nImages;
+//    cout << "Input number of images to detect: ";
+//    cin >> nImages;
     EASY_BLOCK("total imgs block", profiler::colors::Black)
+
+    cout << nImages << endl;
     for(int ni=0; ni<nImages; ni++)
     {
         EASY_BLOCK("single img block", profiler::colors::Yellow)
@@ -91,6 +93,7 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the image to the SLAM system
+
         SLAM.TrackMonocular(im,tframe);
 
 #ifdef COMPILEDWITHC11
@@ -131,8 +134,8 @@ int main(int argc, char **argv)
     cout << "mean tracking time: " << totaltime/nImages << endl;
 
     // Save camera trajectory
-    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
-    profiler::dumpBlocksToFile("test_profile.prof");
+    SLAM.SaveKeyFrameTrajectoryTUM("omp_KeyFrameTrajectory0.txt");
+    profiler::dumpBlocksToFile("omp_profile06_default.prof");
     return 0;
 }
 
