@@ -53,7 +53,7 @@ int main(int argc, char **argv)
   vector<double> vTimestamps;
   LoadImages(string(argv[3]), vstrImageFilenames, vTimestamps);
 
-  int nImages = vstrImageFilenames.size();
+  const int nImages = vstrImageFilenames.size();
 
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
   ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
@@ -68,8 +68,8 @@ int main(int argc, char **argv)
   // --------------------- start slam system ----------------------
   // Main loop
   cv::Mat im;
-  cout << "Input number of images to detect: ";
-  cin >> nImages;
+//  cout << "Input number of images to detect: ";
+//  cin >> nImages;
   EASY_BLOCK("total imgs block", profiler::colors::Black)
   for(int ni=0; ni<nImages; ni++)
   {
