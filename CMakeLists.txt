@@ -51,6 +51,8 @@ if(${easy_profiler_FOUND})
    message(STATUS "Found: Easy-profiler - ${easy_profiler_DIR}")
 endif(${easy_profiler_FOUND})
 
+find_package(OpenMP REQUIRED)
+
 set(EASY_PROFILER_LIBS easy_profiler)
 set(BUILD_WITH_EASY_PROFILER true)
 
@@ -94,6 +96,7 @@ ${Pangolin_LIBRARIES}
 easy_profiler
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+        OpenMP::OpenMP_CXX
 )
 
 # Build examples

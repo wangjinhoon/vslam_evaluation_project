@@ -34,6 +34,8 @@
 #include "ORBmatcher.h"
 #include "MapPoint.h"
 #include "ORBextractor.h"
+#include<easy/profiler.h>
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 namespace ORB_SLAM2
 {
@@ -187,6 +189,7 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
 {
+    EASY_BLOCK("Frame", profiler::colors::Orange)
     // Frame ID
     mnId=nNextId++;
 
@@ -237,10 +240,12 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mb = mbf/fx;
 
     AssignFeaturesToGrid();
+    EASY_END_BLOCK
 }
 
 void Frame::AssignFeaturesToGrid()
 {
+    EASY_BLOCK("AssignFeaturesToGrid", profiler::colors::Red)
     int nReserve = 0.5f*N/(FRAME_GRID_COLS*FRAME_GRID_ROWS);
     for(unsigned int i=0; i<FRAME_GRID_COLS;i++)
         for (unsigned int j=0; j<FRAME_GRID_ROWS;j++)
@@ -254,32 +259,40 @@ void Frame::AssignFeaturesToGrid()
         if(PosInGrid(kp,nGridPosX,nGridPosY))
             mGrid[nGridPosX][nGridPosY].push_back(i);
     }
+    EASY_END_BLOCK
 }
 
 void Frame::ExtractORB(int flag, const cv::Mat &im)
 {
+    EASY_BLOCK("ExtractORB", profiler::colors::Blue)
     if(flag==0)
         (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors);
     else
         (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight);
+    EASY_END_BLOCK
 }
 
 void Frame::SetPose(cv::Mat Tcw)
 {
+    EASY_BLOCK("SetPose", profiler::colors::Brown)
     mTcw = Tcw.clone();
     UpdatePoseMatrices();
+    EASY_END_BLOCK
 }
 
 void Frame::UpdatePoseMatrices()
-{ 
+{
+    EASY_BLOCK("UpdatePoseMatriced", profiler::colors::Cyan)
     mRcw = mTcw.rowRange(0,3).colRange(0,3);
     mRwc = mRcw.t();
     mtcw = mTcw.rowRange(0,3).col(3);
     mOw = -mRcw.t()*mtcw;
+    EASY_END_BLOCK
 }
 
 bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
 {
+  EASY_BLOCK("isInFrustum", profiler::colors::Cyan)
     pMP->mbTrackInView = false;
 
     // 3D in absolute coordinates
@@ -332,12 +345,13 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
     pMP->mTrackProjY = v;
     pMP->mnTrackScaleLevel= nPredictedLevel;
     pMP->mTrackViewCos = viewCos;
-
+    EASY_END_BLOCK
     return true;
 }
 
 vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel, const int maxLevel) const
 {
+  EASY_BLOCK("GetFeaturesInArea", profiler::colors::Cyan)
     vector<size_t> vIndices;
     vIndices.reserve(N);
 
@@ -387,19 +401,20 @@ vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const f
             }
         }
     }
-
+    EASY_END_BLOCK
     return vIndices;
 }
 
 bool Frame::PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY)
 {
+  EASY_BLOCK("PosInGrid", profiler::colors::Red)
     posX = round((kp.pt.x-mnMinX)*mfGridElementWidthInv);
     posY = round((kp.pt.y-mnMinY)*mfGridElementHeightInv);
 
+    EASY_END_BLOCK
     //Keypoint's coordinates are undistorted, which could cause to go out of the image
     if(posX<0 || posX>=FRAME_GRID_COLS || posY<0 || posY>=FRAME_GRID_ROWS)
         return false;
-
     return true;
 }
 
@@ -415,6 +430,7 @@ void Frame::ComputeBoW()
 
 void Frame::UndistortKeyPoints()
 {
+    EASY_BLOCK("UndistortKeyPoints", profiler::colors::Purple)
     if(mDistCoef.at<float>(0)==0.0)
     {
         mvKeysUn=mvKeys;
@@ -443,10 +459,12 @@ void Frame::UndistortKeyPoints()
         kp.pt.y=mat.at<float>(i,1);
         mvKeysUn[i]=kp;
     }
+    EASY_END_BLOCK
 }
 
 void Frame::ComputeImageBounds(const cv::Mat &imLeft)
 {
+    EASY_BLOCK("ComputeImageBounds", profiler::colors::Pink)
     if(mDistCoef.at<float>(0)!=0.0)
     {
         cv::Mat mat(4,2,CV_32F);
@@ -473,6 +491,7 @@ void Frame::ComputeImageBounds(const cv::Mat &imLeft)
         mnMinY = 0.0f;
         mnMaxY = imLeft.rows;
     }
+    EASY_END_BLOCK
 }
 
 void Frame::ComputeStereoMatches()

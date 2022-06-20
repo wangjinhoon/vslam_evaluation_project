@@ -42,9 +42,13 @@
 #include "MapDrawer.h"
 #include "Tracking.h"
 #include "Viewer.h"
+#include "easy/profiler.h"
+
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 namespace ORB_SLAM2
 {
+
 class MapPoint;
 
 System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
@@ -133,6 +137,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
 {
+    EASY_BLOCK("TrackStereo", profiler::colors::Blue)
     if(mSensor!=STEREO)
     {
         cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << endl;
@@ -179,6 +184,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
     mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+    EASY_END_BLOCK
     return Tcw;
 }
 
@@ -235,6 +241,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
 
 cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
 {
+    EASY_BLOCK("TrackMonocular", profiler::colors::Blue)
     if(mSensor!=MONOCULAR)
     {
         cerr << "ERROR: you called TrackMonocular but input sensor was not set to Monocular." << endl;
@@ -244,12 +251,12 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     // Check mode change
     {
         unique_lock<mutex> lock(mMutexMode);
-        if(mbActivateLocalizationMode)
+        if(mbActivateLocalizationMode) // locallization을 할꺼냐! 에 대한 flag
         {
-            mpLocalMapper->RequestStop();
+            mpLocalMapper->RequestStop(); // locallization 중지!
 
             // Wait until Local Mapping has effectively stopped
-            while(!mpLocalMapper->isStopped())
+            while(!mpLocalMapper->isStopped()) //locallization 될때까지 기다려!
             {
                 usleep(1000);
             }
@@ -281,9 +288,10 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
     mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
-
+    EASY_END_BLOCK
     return Tcw;
 }
+
 
 void System::ActivateLocalizationMode()
 {

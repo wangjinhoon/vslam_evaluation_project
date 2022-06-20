@@ -28,7 +28,9 @@
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
 
 #include<stdint-gcc.h>
-
+#include<omp.h>
+#include"easy/profiler.h"
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 using namespace std;
 
 namespace ORB_SLAM2
@@ -158,6 +160,7 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoin
 
 int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)
 {
+    EASY_BLOCK("ORBmatcher::SearchByBoW", profiler::colors::AmberA700)
     const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();
 
     vpMapPointMatches = vector<MapPoint*>(F.N,static_cast<MapPoint*>(NULL));
@@ -179,6 +182,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
 
     while(KFit != KFend && Fit != Fend)
     {
+
         if(KFit->first == Fit->first)
         {
             const vector<unsigned int> vIndicesKF = KFit->second;
@@ -201,7 +205,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
                 int bestDist1=256;
                 int bestIdxF =-1 ;
                 int bestDist2=256;
-
+                //#pragma omp parallel for
                 for(size_t iF=0; iF<vIndicesF.size(); iF++)
                 {
                     const unsigned int realIdxF = vIndicesF[iF];
@@ -283,7 +287,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
             }
         }
     }
-
+    EASY_END_BLOCK
     return nmatches;
 }
 

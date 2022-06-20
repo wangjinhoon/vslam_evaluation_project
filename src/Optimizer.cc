@@ -31,8 +31,9 @@
 #include<Eigen/StdVector>
 
 #include "Converter.h"
-
+#include "easy/profiler.h"
 #include<mutex>
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 namespace ORB_SLAM2
 {
@@ -40,15 +41,18 @@ namespace ORB_SLAM2
 
 void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust)
 {
+  EASY_BLOCK("GlobalBundleAdjustemnt", profiler::colors::Purple)
     vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
     vector<MapPoint*> vpMP = pMap->GetAllMapPoints();
     BundleAdjustment(vpKFs,vpMP,nIterations,pbStopFlag, nLoopKF, bRobust);
+    EASY_END_BLOCK
 }
 
 
 void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<MapPoint *> &vpMP,
                                  int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust)
 {
+  EASY_BLOCK("BundleAdjustment", profiler::colors::Purple)
     vector<bool> vbNotIncludedMP;
     vbNotIncludedMP.resize(vpMP.size());
 
@@ -233,11 +237,12 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
             pMP->mnBAGlobalForKF = nLoopKF;
         }
     }
-
+    EASY_END_BLOCK
 }
 
 int Optimizer::PoseOptimization(Frame *pFrame)
 {
+  EASY_BLOCK("PoseOptimization", profiler::colors::Red)
     g2o::SparseOptimizer optimizer;
     g2o::BlockSolver_6_3::LinearSolverType * linearSolver;
 
@@ -446,12 +451,13 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
     cv::Mat pose = Converter::toCvMat(SE3quat_recov);
     pFrame->SetPose(pose);
-
+    EASY_END_BLOCK
     return nInitialCorrespondences-nBad;
 }
 
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap)
-{    
+{
+  EASY_BLOCK("LocalBundleAdjustment", profiler::colors::Yellow)
     // Local KeyFrames: First Breath Search from Current Keyframe
     list<KeyFrame*> lLocalKeyFrames;
 
@@ -775,6 +781,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
         pMP->SetWorldPos(Converter::toCvMat(vPoint->estimate()));
         pMP->UpdateNormalAndDepth();
     }
+    EASY_END_BLOCK
 }
 
 
@@ -783,6 +790,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
                                        const LoopClosing::KeyFrameAndPose &CorrectedSim3,
                                        const map<KeyFrame *, set<KeyFrame *> > &LoopConnections, const bool &bFixScale)
 {
+  EASY_BLOCK("OptimizeEssentialGraph", profiler::colors::Yellow)
     // Setup optimizer
     g2o::SparseOptimizer optimizer;
     optimizer.setVerbose(false);
@@ -1041,6 +1049,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
 
         pMP->UpdateNormalAndDepth();
     }
+    EASY_END_BLOCK
 }
 
 int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale)

@@ -39,7 +39,8 @@
 #include<iostream>
 
 #include<mutex>
-
+#include<easy/profiler.h>
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 using namespace std;
 
@@ -240,6 +241,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 
 cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 {
+    EASY_BLOCK("GrabImageMonocular", profiler::colors::Green)
     mImGray = im;
 
     if(mImGray.channels()==3)
@@ -263,12 +265,13 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
         mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
-
+    EASY_END_BLOCK
     return mCurrentFrame.mTcw.clone();
 }
 
 void Tracking::Track()
 {
+    EASY_BLOCK("Track", profiler::colors::Amber)
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
@@ -505,6 +508,7 @@ void Tracking::Track()
         tracked_frame.lost = (mState == LOST);
         tracked_frames.push_back(tracked_frame);
     }
+    EASY_END_BLOCK
 
 }
 
@@ -565,6 +569,7 @@ void Tracking::StereoInitialization()
 
 void Tracking::MonocularInitialization()
 {
+    EASY_BLOCK("MonocularInitialization", profiler::colors::BlueGrey50)
 
     if(!mpInitializer)
     {
@@ -635,10 +640,12 @@ void Tracking::MonocularInitialization()
             CreateInitialMapMonocular();
         }
     }
+    EASY_END_BLOCK
 }
 
 void Tracking::CreateInitialMapMonocular()
 {
+    EASY_BLOCK("CreateInitialMapMonocular", profiler::colors::CreamWhite)
     // Create KeyFrames
     KeyFrame* pKFini = new KeyFrame(mInitialFrame,mpMap,mpKeyFrameDB);
     KeyFrame* pKFcur = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB);
@@ -737,6 +744,7 @@ void Tracking::CreateInitialMapMonocular()
     mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
     mState=OK;
+    EASY_END_BLOCK
 }
 
 void Tracking::CheckReplacedInLastFrame()
@@ -759,6 +767,7 @@ void Tracking::CheckReplacedInLastFrame()
 
 bool Tracking::TrackReferenceKeyFrame()
 {
+  EASY_BLOCK("TrackReferenceKeyFrame", profiler::colors::Purple)
     // Compute Bag of Words vector
     mCurrentFrame.ComputeBoW();
 
@@ -797,12 +806,14 @@ bool Tracking::TrackReferenceKeyFrame()
                 nmatchesMap++;
         }
     }
-
+    EASY_END_BLOCK
     return nmatchesMap>=10;
+
 }
 
 void Tracking::UpdateLastFrame()
 {
+  EASY_BLOCK("TrackReferenceKeyFrame", profiler::colors::Black)
     // Update pose according to reference keyframe
     KeyFrame* pRef = mLastFrame.mpReferenceKF;
     cv::Mat Tlr = tracked_frames.back().relative_frame_pose;
@@ -865,10 +876,12 @@ void Tracking::UpdateLastFrame()
         if(vDepthIdx[j].first>mThDepth && nPoints>100)
             break;
     }
+    EASY_END_BLOCK
 }
 
 bool Tracking::TrackWithMotionModel()
 {
+  EASY_BLOCK("TrackWithMotionModel", profiler::colors::Black)
     ORBmatcher matcher(0.9,true);
 
     // Update last frame pose according to its reference keyframe
@@ -926,12 +939,13 @@ bool Tracking::TrackWithMotionModel()
         mbVO = nmatchesMap<10;
         return nmatches>20;
     }
-
+    EASY_END_BLOCK
     return nmatchesMap>=10;
 }
 
 bool Tracking::TrackLocalMap()
 {
+  EASY_BLOCK("TrackLocalMap", profiler::colors::Red)
     // We have an estimation of the camera pose and some map points tracked in the frame.
     // We retrieve the local map and try to find matches to points in the local map.
 
@@ -964,7 +978,7 @@ bool Tracking::TrackLocalMap()
 
         }
     }
-
+    EASY_END_BLOCK
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
     if(mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
@@ -979,6 +993,7 @@ bool Tracking::TrackLocalMap()
 
 bool Tracking::NeedNewKeyFrame()
 {
+  EASY_BLOCK("NeedNewKeyFrame", profiler::colors::Red)
     if(mbOnlyTracking)
         return false;
 
@@ -1036,7 +1051,7 @@ bool Tracking::NeedNewKeyFrame()
     const bool c1c =  mSensor!=System::MONOCULAR && (mnMatchesInliers<nRefMatches*0.25 || bNeedToInsertClose) ;
     // Condition 2: Few tracked points compared to reference keyframe. Lots of visual odometry compared to map matches.
     const bool c2 = ((mnMatchesInliers<nRefMatches*thRefRatio|| bNeedToInsertClose) && mnMatchesInliers>15);
-
+    EASY_END_BLOCK
     if((c1a||c1b||c1c)&&c2)
     {
         // If the mapping accepts keyframes, insert keyframe.
@@ -1065,6 +1080,7 @@ bool Tracking::NeedNewKeyFrame()
 
 void Tracking::CreateNewKeyFrame()
 {
+  EASY_BLOCK("CreateNewKeyFrame", profiler::colors::Red)
     if(!mpLocalMapper->SetNotStop(true))
         return;
 
@@ -1141,6 +1157,7 @@ void Tracking::CreateNewKeyFrame()
 
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
+    EASY_END_BLOCK
 }
 
 void Tracking::SearchLocalPoints()

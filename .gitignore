@@ -3,6 +3,8 @@
 cmake-build-debug/
 cmake-build-release/
 
+omp_profile06_default.prof
+
 Thirdparty/cereal
 Thirdparty/ceres
 Thirdparty/easy_profiler
