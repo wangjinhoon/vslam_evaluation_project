@@ -292,7 +292,6 @@ void Frame::UpdatePoseMatrices()
 
 bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
 {
-  EASY_BLOCK("isInFrustum", profiler::colors::Cyan)
     pMP->mbTrackInView = false;
 
     // 3D in absolute coordinates
@@ -345,13 +344,12 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
     pMP->mTrackProjY = v;
     pMP->mnTrackScaleLevel= nPredictedLevel;
     pMP->mTrackViewCos = viewCos;
-    EASY_END_BLOCK
+
     return true;
 }
 
 vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel, const int maxLevel) const
 {
-  EASY_BLOCK("GetFeaturesInArea", profiler::colors::Cyan)
     vector<size_t> vIndices;
     vIndices.reserve(N);
 
@@ -401,20 +399,19 @@ vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const f
             }
         }
     }
-    EASY_END_BLOCK
+
     return vIndices;
 }
 
 bool Frame::PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY)
 {
-  EASY_BLOCK("PosInGrid", profiler::colors::Red)
     posX = round((kp.pt.x-mnMinX)*mfGridElementWidthInv);
     posY = round((kp.pt.y-mnMinY)*mfGridElementHeightInv);
 
-    EASY_END_BLOCK
     //Keypoint's coordinates are undistorted, which could cause to go out of the image
     if(posX<0 || posX>=FRAME_GRID_COLS || posY<0 || posY>=FRAME_GRID_ROWS)
         return false;
+
     return true;
 }
 

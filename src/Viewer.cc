@@ -30,6 +30,8 @@
 #include "FrameDrawer.h"
 #include "MapDrawer.h"
 #include "System.h"
+#include "easy/profiler.h"
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 namespace ORB_SLAM2
 {
@@ -61,6 +63,7 @@ Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer
 
 void Viewer::Run()
 {
+    EASY_BLOCK("Map Viewer", profiler::colors::Pink)
     mbFinished = false;
     mbStopped = false;
 
@@ -174,6 +177,7 @@ void Viewer::Run()
     }
 
     SetFinish();
+    EASY_END_BLOCK
 }
 
 void Viewer::RequestFinish()

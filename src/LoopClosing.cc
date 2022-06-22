@@ -39,7 +39,7 @@
 #include "MapPoint.h"
 #include "easy/profiler.h"
 # define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
-
+#include<omp.h>
 namespace DBoW2 { class BowVector; }
 
 #include<mutex>
@@ -459,8 +459,10 @@ void LoopClosing::CorrectLoop()
     {
         // Get Map Mutex
         unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
+        //#pragma omp parallel
         for(vector<KeyFrame*>::iterator vit=mvpCurrentConnectedKFs.begin(), vend=mvpCurrentConnectedKFs.end(); vit!=vend; vit++)
         {
+            printf("Retriving keyframe : thread %d (in parallel)\n", omp_get_thread_num());
             KeyFrame* pKFi = *vit;
 
             cv::Mat Tiw = pKFi->GetPose();
@@ -484,9 +486,10 @@ void LoopClosing::CorrectLoop()
         }
 
         // Correct all MapPoints obsrved by current keyframe and neighbors, so that they align with the other side of the loop
-
+        //#pragma omp parallel
         for(KeyFrameAndPose::iterator mit=CorrectedSim3.begin(), mend=CorrectedSim3.end(); mit!=mend; mit++)
         {
+            printf("Correcting MapPoints : thread %d (in parallel)\n", omp_get_thread_num());
             KeyFrame* pKFi = mit->first;
             g2o::Sim3 g2oCorrectedSiw = mit->second;
             g2o::Sim3 g2oCorrectedSwi = g2oCorrectedSiw.inverse();
@@ -533,8 +536,10 @@ void LoopClosing::CorrectLoop()
 
         // Start Loop Fusion
         // Update matched map points and replace if duplicated
+        //#pragma omp parallel
         for(size_t i=0; i<mvpCurrentMatchedPoints.size(); i++)
         {
+            printf("update map and replace duplication : thread %d (in parallel)\n", omp_get_thread_num());
             if(mvpCurrentMatchedPoints[i])
             {
                 MapPoint* pLoopMP = mvpCurrentMatchedPoints[i];
