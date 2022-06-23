@@ -32,8 +32,9 @@
 #include "KeyFrameDatabase.h"
 #include "Map.h"
 #include "MapPoint.h"
-
+#include "easy/profiler.h"
 #include<mutex>
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 namespace ORB_SLAM2
 {
@@ -70,6 +71,7 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
 
 void KeyFrame::ComputeBoW()
 {
+
     if(mBowVec.empty() || mFeatVec.empty())
     {
         vector<cv::Mat> vCurrentDesc = Converter::toDescriptorVector(mDescriptors);

@@ -29,6 +29,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <omp.h>
 
 #include "LoopClosing.h"
 #include "ORBmatcher.h"
@@ -248,6 +249,7 @@ void LocalMapping::CreateNewMapPoints()
     int nnew=0;
 
     // Search matches with epipolar restriction and triangulate
+
     for(size_t i=0; i<vpNeighKFs.size(); i++)
     {
         if(i>0 && CheckNewKeyFrames())
@@ -662,6 +664,7 @@ void LocalMapping::KeyFrameCulling()
         const int thObs=nObs;
         int nRedundantObservations=0;
         int nMPs=0;
+
         for(size_t i=0, iend=vpMapPoints.size(); i<iend; i++)
         {
             MapPoint* pMP = vpMapPoints[i];

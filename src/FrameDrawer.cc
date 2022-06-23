@@ -30,6 +30,8 @@
 #include "MapPoint.h"
 
 #include<mutex>
+#include "easy/profiler.h"
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 namespace ORB_SLAM2
 {
@@ -66,7 +68,7 @@ cv::Mat FrameDrawer::DrawFrame()
         }
         else if(mState==Tracking::OK)
         {
-            vCurrentKeys = mvCurrentKeys;
+            vCurrentKeys = mvCurrentKeys; //현재 프레임의 키포인트
             vbVO = mvbVO;
             vbMap = mvbMap;
         }
@@ -169,8 +171,9 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 
 }
 
-void FrameDrawer::Update(Tracking *pTracker)
+void FrameDrawer::Update(Tracking *pTracker) //특징점들을 참고하여 map 업데이트
 {
+    EASY_BLOCK("FrameDrawer::update()", profiler::colors::DeepOrange800)
     unique_lock<mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
@@ -203,6 +206,7 @@ void FrameDrawer::Update(Tracking *pTracker)
         }
     }
     mState=static_cast<int>(pTracker->mLastProcessedState);
+    EASY_END_BLOCK
 }
 
 } //namespace ORB_SLAM

@@ -28,7 +28,7 @@ endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-find_package(OpenCV 4 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/Thirdparty/opencv/install/Debug/lib/cmake/opencv4)
+find_package(OpenCV 4 QUIET HINTS /home/jw/SLAM/programmers_slam_project_template/thirdparty/opencv/install/Debug/lib/cmake/opencv4)
 if(NOT OpenCV_FOUND)
    find_package(OpenCV 2.4.3 QUIET)
    if(NOT OpenCV_FOUND)
@@ -36,23 +36,13 @@ if(NOT OpenCV_FOUND)
    endif()
 endif()
 
-
-find_package(Pangolin REQUIRED HINTS ${CMAKE_SOURCE_DIR}/Thirdparty/pangolin/install/Debug/lib/cmake/Pangolin)
-if (Pangolin_FOUND)
-   MESSAGE(STATUS "Pangolin FOUND! - ${Pangolin_DIR}")
-endif()
-find_package(Eigen3 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/Thirdparty/eigen/install/Debug/share/eigen3/cmake)
-if (Eigen3_FOUND)
-   MESSAGE(STATUS "Eigen3 FOUND! - ${Eigen3_DIR}")
-   set(Eigen3_LIBS Eigen3::Eigen)
-endif()
+find_package(Eigen3 3.1.0 REQUIRED HINTS /home/jw/SLAM/programmers_slam_project_template/thirdparty/eigen/install/Debug/share/eigen3/cmake)
+find_package(Pangolin REQUIRED HINTS ${CMAKE_SOURCE_DIR}/Thirdparty/pangolin/install/lib/cmake/Pangolin)
 find_package(easy_profiler REQUIRED HINTS ${CMAKE_SOURCE_DIR}/Thirdparty/easy_profiler/install/lib/cmake/easy_profiler)
+find_package(OpenMP REQUIRED)
 if(${easy_profiler_FOUND})
    message(STATUS "Found: Easy-profiler - ${easy_profiler_DIR}")
 endif(${easy_profiler_FOUND})
-
-set(EASY_PROFILER_LIBS easy_profiler)
-set(BUILD_WITH_EASY_PROFILER true)
 
 
 include_directories(
@@ -60,9 +50,10 @@ ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
-${CMAKE_SOURCE_DIR}/Thirdparty/easy_profiler/install/include
+        ${CMAKE_SOURCE_DIR}/thirdparty/easy_profiler/install/Release/include
 )
-
+set(EASY_PROFILER_LIBS easy_profiler)
+set(BUILD_WITH_EASY_PROFILER true)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_library(${PROJECT_NAME} SHARED
@@ -87,21 +78,47 @@ src/Initializer.cc
 src/Viewer.cc
 )
 
-target_link_libraries(${PROJECT_NAME}
-${OpenCV_LIBS}
-${EIGEN3_LIBS}
-${Pangolin_LIBRARIES}
-easy_profiler
-${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+target_link_libraries(
+        ${PROJECT_NAME}
+        ${OpenCV_LIBS}
+        ${EIGEN3_LIBS}
+        ${Pangolin_LIBRARIES}
+        ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+        ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+        easy_profiler
+        OpenMP::OpenMP_CXX
 )
 
 # Build examples
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
+
+add_executable(rgbd_tum
+Examples/RGB-D/rgbd_tum.cc)
+target_link_libraries(rgbd_tum ${PROJECT_NAME})
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
+
+add_executable(stereo_kitti
+Examples/Stereo/stereo_kitti.cc)
+target_link_libraries(stereo_kitti ${PROJECT_NAME})
+
+add_executable(stereo_euroc
+Examples/Stereo/stereo_euroc.cc)
+target_link_libraries(stereo_euroc ${PROJECT_NAME})
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
+
+add_executable(mono_tum
+Examples/Monocular/mono_tum.cc)
+target_link_libraries(mono_tum ${PROJECT_NAME})
 
 add_executable(mono_kitti
-Examples/mono_kitti.cc)
+Examples/Monocular/mono_kitti.cc)
 target_link_libraries(mono_kitti ${PROJECT_NAME})
+
+add_executable(mono_euroc
+Examples/Monocular/mono_euroc.cc)
+target_link_libraries(mono_euroc ${PROJECT_NAME})
+

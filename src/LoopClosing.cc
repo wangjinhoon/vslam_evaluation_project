@@ -37,7 +37,9 @@
 #include "LocalMapping.h"
 #include "Map.h"
 #include "MapPoint.h"
-
+#include "easy/profiler.h"
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
+#include<omp.h>
 namespace DBoW2 { class BowVector; }
 
 #include<mutex>
@@ -365,6 +367,7 @@ bool LoopClosing::ComputeSim3()
     vector<KeyFrame*> vpLoopConnectedKFs = mpMatchedKF->GetVectorCovisibleKeyFrames();
     vpLoopConnectedKFs.push_back(mpMatchedKF);
     mvpLoopMapPoints.clear();
+
     for(vector<KeyFrame*>::iterator vit=vpLoopConnectedKFs.begin(); vit!=vpLoopConnectedKFs.end(); vit++)
     {
         KeyFrame* pKF = *vit;
@@ -413,6 +416,7 @@ bool LoopClosing::ComputeSim3()
 
 void LoopClosing::CorrectLoop()
 {
+    EASY_BLOCK("loop_closing", profiler::colors::Yellow)
     cout << "Loop detected!" << endl;
 
     // Send a stop signal to Local Mapping
@@ -455,7 +459,7 @@ void LoopClosing::CorrectLoop()
     {
         // Get Map Mutex
         unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
-
+        #pragma omp parallel
         for(vector<KeyFrame*>::iterator vit=mvpCurrentConnectedKFs.begin(), vend=mvpCurrentConnectedKFs.end(); vit!=vend; vit++)
         {
             KeyFrame* pKFi = *vit;
@@ -481,6 +485,7 @@ void LoopClosing::CorrectLoop()
         }
 
         // Correct all MapPoints obsrved by current keyframe and neighbors, so that they align with the other side of the loop
+        #pragma omp parallel
         for(KeyFrameAndPose::iterator mit=CorrectedSim3.begin(), mend=CorrectedSim3.end(); mit!=mend; mit++)
         {
             KeyFrame* pKFi = mit->first;
@@ -529,6 +534,7 @@ void LoopClosing::CorrectLoop()
 
         // Start Loop Fusion
         // Update matched map points and replace if duplicated
+        #pragma omp parallel
         for(size_t i=0; i<mvpCurrentMatchedPoints.size(); i++)
         {
             if(mvpCurrentMatchedPoints[i])
@@ -593,7 +599,8 @@ void LoopClosing::CorrectLoop()
     // Loop closed. Release Local Mapping.
     mpLocalMapper->Release();    
 
-    mLastLoopKFid = mpCurrentKF->mnId;   
+    mLastLoopKFid = mpCurrentKF->mnId;
+    EASY_END_BLOCK
 }
 
 void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap)

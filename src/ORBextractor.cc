@@ -68,7 +68,9 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
-
+#include <omp.h>
+#include "easy/profiler.h"
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 using namespace cv;
 using namespace std;
@@ -116,6 +118,7 @@ static void computeOrbDescriptor(const KeyPoint& kpt,
                                  const Mat& img, const Point* pattern,
                                  uchar* desc)
 {
+    EASY_BLOCK("computeOrbDescriptor", profiler::colors::Red)
     float angle = (float)kpt.angle*factorPI;
     float a = (float)cos(angle), b = (float)sin(angle);
 
@@ -151,6 +154,7 @@ static void computeOrbDescriptor(const KeyPoint& kpt,
     }
 
     #undef GET_VALUE
+    EASY_END_BLOCK
 }
 
 
@@ -419,6 +423,7 @@ ORBextractor::ORBextractor(int _nfeatures, float _scaleFactor, int _nlevels,
     nfeatures(_nfeatures), scaleFactor(_scaleFactor), nlevels(_nlevels),
     iniThFAST(_iniThFAST), minThFAST(_minThFAST)
 {
+    EASY_BLOCK("ORBextractor", profiler::colors::Orange)
     mvScaleFactor.resize(nlevels);
     mvLevelSigma2.resize(nlevels);
     mvScaleFactor[0]=1.0f;
@@ -474,19 +479,23 @@ ORBextractor::ORBextractor(int _nfeatures, float _scaleFactor, int _nlevels,
         umax[v] = v0;
         ++v0;
     }
+    EASY_END_BLOCK
 }
 
 static void computeOrientation(const Mat& image, vector<KeyPoint>& keypoints, const vector<int>& umax)
 {
+    EASY_BLOCK("computeOrientation", profiler::colors::Yellow)
     for (vector<KeyPoint>::iterator keypoint = keypoints.begin(),
          keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
     {
         keypoint->angle = IC_Angle(image, keypoint->pt, umax);
     }
+    EASY_END_BLOCK
 }
 
 void ExtractorNode::DivideNode(ExtractorNode &n1, ExtractorNode &n2, ExtractorNode &n3, ExtractorNode &n4)
 {
+    EASY_BLOCK("DivideNode", profiler::colors::Green)
     const int halfX = ceil(static_cast<float>(UR.x-UL.x)/2);
     const int halfY = ceil(static_cast<float>(BR.y-UL.y)/2);
 
@@ -541,11 +550,14 @@ void ExtractorNode::DivideNode(ExtractorNode &n1, ExtractorNode &n2, ExtractorNo
     if(n4.vKeys.size()==1)
         n4.bNoMore = true;
 
+    EASY_END_BLOCK
+
 }
 
 vector<cv::KeyPoint> ORBextractor::DistributeOctTree(const vector<cv::KeyPoint>& vToDistributeKeys, const int &minX,
                                        const int &maxX, const int &minY, const int &maxY, const int &N, const int &level)
 {
+    EASY_BLOCK("DistributeOctTree", profiler::colors::Blue)
     // Compute how many initial nodes   
     const int nIni = round(static_cast<float>(maxX-minX)/(maxY-minY));
 
@@ -765,18 +777,20 @@ vector<cv::KeyPoint> ORBextractor::DistributeOctTree(const vector<cv::KeyPoint>&
 
         vResultKeys.push_back(*pKP);
     }
-
+    EASY_END_BLOCK
     return vResultKeys;
 }
 
 void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoints)
 {
+    EASY_BLOCK("ComputeKeyPointsOctTree", profiler::colors::DarkBlue)
     allKeypoints.resize(nlevels);
 
     const float W = 30;
-
+    #pragma omp parallel for
     for (int level = 0; level < nlevels; ++level)
     {
+        //printf("thread %d (in parallel)\n", omp_get_thread_num());
         const int minBorderX = EDGE_THRESHOLD-3;
         const int minBorderY = minBorderX;
         const int maxBorderX = mvImagePyramid[level].cols-EDGE_THRESHOLD+3;
@@ -795,6 +809,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
 
         for(int i=0; i<nRows; i++)
         {
+
             const float iniY =minBorderY+i*hCell;
             float maxY = iniY+hCell+6;
 
@@ -805,6 +820,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
 
             for(int j=0; j<nCols; j++)
             {
+
                 const float iniX =minBorderX+j*wCell;
                 float maxX = iniX+wCell+6;
                 if(iniX>=maxBorderX-6)
@@ -816,11 +832,11 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
                 FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
                      vKeysCell,iniThFAST,true);
 
-                if(vKeysCell.empty())
-                {
-                    FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                         vKeysCell,minThFAST,true);
-                }
+//                if(vKeysCell.empty())
+//                {
+//                    FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
+//                         vKeysCell,minThFAST,true);
+//                }
 
                 if(!vKeysCell.empty())
                 {
@@ -857,10 +873,12 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
     // compute orientations
     for (int level = 0; level < nlevels; ++level)
         computeOrientation(mvImagePyramid[level], allKeypoints[level], umax);
+    EASY_END_BLOCK
 }
 
 void ORBextractor::ComputeKeyPointsOld(std::vector<std::vector<KeyPoint> > &allKeypoints)
 {
+    EASY_BLOCK("ComputeKeyPointsOld", profiler::colors::Purple)
     allKeypoints.resize(nlevels);
 
     float imageRatio = (float)mvImagePyramid[0].cols/mvImagePyramid[0].rows;
@@ -1036,20 +1054,24 @@ void ORBextractor::ComputeKeyPointsOld(std::vector<std::vector<KeyPoint> > &allK
     // and compute orientations
     for (int level = 0; level < nlevels; ++level)
         computeOrientation(mvImagePyramid[level], allKeypoints[level], umax);
+    EASY_END_BLOCK
 }
 
 static void computeDescriptors(const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors,
                                const vector<Point>& pattern)
 {
+    EASY_BLOCK("computeDescriptors", profiler::colors::CreamWhite)
     descriptors = Mat::zeros((int)keypoints.size(), 32, CV_8UC1);
 
     for (size_t i = 0; i < keypoints.size(); i++)
         computeOrbDescriptor(keypoints[i], image, &pattern[0], descriptors.ptr((int)i));
+    EASY_END_BLOCK
 }
 
 void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPoint>& _keypoints,
                       OutputArray _descriptors)
-{ 
+{
+    EASY_BLOCK("operator", profiler::colors::LightBlue)
     if(_image.empty())
         return;
 
@@ -1066,6 +1088,7 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     Mat descriptors;
 
     int nkeypoints = 0;
+
     for (int level = 0; level < nlevels; ++level)
         nkeypoints += (int)allKeypoints[level].size();
     if( nkeypoints == 0 )
@@ -1082,6 +1105,7 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     int offset = 0;
     for (int level = 0; level < nlevels; ++level)
     {
+        //#pragma omp parallel
         vector<KeyPoint>& keypoints = allKeypoints[level];
         int nkeypointsLevel = (int)keypoints.size();
 
@@ -1109,10 +1133,12 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
         // And add the keypoints to the output
         _keypoints.insert(_keypoints.end(), keypoints.begin(), keypoints.end());
     }
+    EASY_END_BLOCK
 }
 
 void ORBextractor::ComputePyramid(cv::Mat image)
 {
+    EASY_BLOCK("ComputePyramid", profiler::colors::Pink)
     for (int level = 0; level < nlevels; ++level)
     {
         float scale = mvInvScaleFactor[level];
@@ -1135,6 +1161,7 @@ void ORBextractor::ComputePyramid(cv::Mat image)
                            BORDER_REFLECT_101);            
         }
     }
+    EASY_END_BLOCK
 
 }
 

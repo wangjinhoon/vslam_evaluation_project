@@ -39,7 +39,8 @@
 #include<iostream>
 
 #include<mutex>
-
+#include<easy/profiler.h>
+# define EASY_PROFILER_ENABLE ::profiler::setEnabled(true);
 
 using namespace std;
 
@@ -240,6 +241,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 
 cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 {
+    EASY_BLOCK("GrabImageMonocular", profiler::colors::Green)
     mImGray = im;
 
     if(mImGray.channels()==3)
@@ -263,12 +265,13 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
         mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
-
+    EASY_END_BLOCK
     return mCurrentFrame.mTcw.clone();
 }
 
 void Tracking::Track()
 {
+    EASY_BLOCK("Track", profiler::colors::Amber)
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
@@ -505,6 +508,7 @@ void Tracking::Track()
         tracked_frame.lost = (mState == LOST);
         tracked_frames.push_back(tracked_frame);
     }
+    EASY_END_BLOCK
 
 }
 
@@ -565,6 +569,7 @@ void Tracking::StereoInitialization()
 
 void Tracking::MonocularInitialization()
 {
+    EASY_BLOCK("MonocularInitialization", profiler::colors::BlueGrey50)
 
     if(!mpInitializer)
     {
@@ -635,10 +640,12 @@ void Tracking::MonocularInitialization()
             CreateInitialMapMonocular();
         }
     }
+    EASY_END_BLOCK
 }
 
 void Tracking::CreateInitialMapMonocular()
 {
+    EASY_BLOCK("CreateInitialMapMonocular", profiler::colors::CreamWhite)
     // Create KeyFrames
     KeyFrame* pKFini = new KeyFrame(mInitialFrame,mpMap,mpKeyFrameDB);
     KeyFrame* pKFcur = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB);
@@ -737,6 +744,7 @@ void Tracking::CreateInitialMapMonocular()
     mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
     mState=OK;
+    EASY_END_BLOCK
 }
 
 void Tracking::CheckReplacedInLastFrame()
