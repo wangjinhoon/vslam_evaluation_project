@@ -3,9 +3,7 @@
 
 ✅ : 채택
 
-- Git [GitHub - s2lam/vslam_project](https://github.com/s2lam/vslam_project/tree/main)
 
-<aside>
 💡 아우디의 요구사항                                                                                                                  
 우리는 VSLAM으로 주행 중 자동차의 위치 정보를 뽑아서, 우리의 딥러닝 시스템의 Ground truth 정보로 사용하고 싶습니다. ORB-SLAM을 사용하는데, CPU를 너무 많이 사용하기도 하고 속도도 너무 느리더군요.
 
