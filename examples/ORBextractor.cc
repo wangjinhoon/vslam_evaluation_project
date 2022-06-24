@@ -787,7 +787,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
     allKeypoints.resize(nlevels);
 
     const float W = 30;
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int level = 0; level < nlevels; ++level)
     {
         //printf("thread %d (in parallel)\n", omp_get_thread_num());
@@ -832,11 +832,11 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
                 FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
                      vKeysCell,iniThFAST,true);
 
-                if(vKeysCell.empty())
-                {
-                    FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                         vKeysCell,minThFAST,true);
-                }
+//                if(vKeysCell.empty())
+//                {
+//                    FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
+//                         vKeysCell,minThFAST,true);
+//                }
 
                 if(!vKeysCell.empty())
                 {
@@ -1088,6 +1088,7 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     Mat descriptors;
 
     int nkeypoints = 0;
+
     for (int level = 0; level < nlevels; ++level)
         nkeypoints += (int)allKeypoints[level].size();
     if( nkeypoints == 0 )
@@ -1104,6 +1105,7 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     int offset = 0;
     for (int level = 0; level < nlevels; ++level)
     {
+        //#pragma omp parallel
         vector<KeyPoint>& keypoints = allKeypoints[level];
         int nkeypointsLevel = (int)keypoints.size();
 
