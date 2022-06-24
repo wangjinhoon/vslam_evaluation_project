@@ -85,7 +85,7 @@
 3. Gaussian blur✅
 4. **~~OpenCL~~**
 5. **~~BA 부분 최적화~~**
-6. FAST detection 재사용 부부 삭제
+6. FAST detection 재사용 부분 삭제
 
 ### 중간 결과
 
