@@ -1,4 +1,3 @@
 # vslam_project
-```bash
-./Examples/mono_kitti Vocabulary/ORBvoc.txt Examples/KITTI00-02.yaml ~/dataset/sequences/00
-```
+실행 방법 :sparkles:
+https://github.com/anecjong/orb-slam-yaml-to-evo.git
