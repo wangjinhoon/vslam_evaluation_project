@@ -28,9 +28,10 @@
 
 #include<opencv2/core/core.hpp>
 #include<opencv2/imgcodecs/legacy/constants_c.h>
-
+#include <time.h>
 #include<System.h>
 #include "easy/profiler.h"
+
 
 using namespace std;
 
@@ -39,7 +40,7 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
 
 int main(int argc, char **argv)
 {
-  EASY_PROFILER_ENABLE
+    EASY_PROFILER_ENABLE
     if(argc != 4)
     {
         cerr << endl << "Usage: ./stereo_kitti path_to_vocabulary path_to_settings path_to_sequence" << endl;
@@ -52,13 +53,14 @@ int main(int argc, char **argv)
     vector<double> vTimestamps;
     LoadImages(string(argv[3]), vstrImageLeft, vstrImageRight, vTimestamps);
 
-    int nImages = vstrImageLeft.size();
+    const int nImages = vstrImageLeft.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::STEREO,true);
 
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
+
     vTimesTrack.resize(nImages);
 
     cout << endl << "-------" << endl;
@@ -67,12 +69,12 @@ int main(int argc, char **argv)
 
     // Main loop
     cv::Mat imLeft, imRight;
-    cout << "Input number of images to detect: ";
-    cin >> nImages;
-    EASY_BLOCK("total imgs block", profiler::colors::Black)
+
+    EASY_BLOCK("total block", profiler::colors::Red)
     for(int ni=0; ni<nImages; ni++)
     {
-      EASY_BLOCK("single img block", profiler::colors::Yellow)
+        EASY_BLOCK("single img block", profiler::colors::Orange)
+
         // Read left and right images from file
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
         imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
@@ -82,7 +84,7 @@ int main(int argc, char **argv)
         {
             cerr << endl << "Failed to load image at: "
                  << string(vstrImageLeft[ni]) << endl;
-            return 1;
+//            return 1;
         }
 
 #ifdef COMPILEDWITHC11
@@ -113,12 +115,12 @@ int main(int argc, char **argv)
 
         if(ttrack<T)
             usleep((T-ttrack)*1e6);
+
     }
+    EASY_END_BLOCK
 
     // Stop all threads
     SLAM.Shutdown();
-    EASY_END_BLOCK
-
     // Tracking time statistics
     sort(vTimesTrack.begin(),vTimesTrack.end());
     float totaltime = 0;
@@ -129,10 +131,11 @@ int main(int argc, char **argv)
     cout << "-------" << endl << endl;
     cout << "median tracking time: " << vTimesTrack[nImages/2] << endl;
     cout << "mean tracking time: " << totaltime/nImages << endl;
-
+    cout << "total tracking time: " << totaltime << endl;
     // Save camera trajectory
-    SLAM.SaveTrajectoryKITTI("CameraTrajectory.txt");
-    profiler::dumpBlocksToFile("test_profile.prof");
+    SLAM.SaveTrajectoryTUM("CameraTrajectory.txt");
+    profiler::dumpBlocksToFile("default.prof");
+
     return 0;
 }
 
