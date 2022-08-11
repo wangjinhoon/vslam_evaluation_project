@@ -4,7 +4,7 @@
 ### 프로젝트 기간 : 2주
 ### 사용 언어 : C++
 ### 개발 환경 : Ubuntu18.04
-### 사용할 툴 : ORB_SLAM2, Easy profiler, EVO
+### 사용 기술 스택 : ORB_SLAM2, Easy profiler, EVO
 ## 내용
 적절한 VSLAM을 정한 뒤 속도면에서 최적화하여 자동차의 pose data 얻기
 
