@@ -4,9 +4,9 @@
 ### 프로젝트 기간 : 2주
 ### 사용 언어 : C++
 ### 개발 환경 : Ubuntu18.04
-### 사용 기술 스택 : ORB_SLAM2, Easy profiler, EVO
+### 사용 기술 스택 : ORB_SLAM2, Easy profiler, EVO, OpenMP
 ## 내용
-적절한 VSLAM을 정한 뒤 속도면에서 OpenCL, 파이프라인 변경, thresholds 값 조정등을 통해 최적화한 뒤 자동차의 pose data 얻기
+적절한 VSLAM을 정한 뒤 속도면에서 OpenMP, 파이프라인 변경, thresholds 값 조정등을 통해 최적화한 뒤 자동차의 pose data 얻기
 
 
 ### 프로젝트 설명 및 가이드  
